@@ -1,8 +1,8 @@
 import os
 import sys
-from properties_reader import PropertiesReader
-from excel_reader import ExcelReader
-from excel_comparator import ExcelComparator
+from config.properties import PropertiesReader
+from core.reader import ExcelReader
+from core.comparator import ExcelComparator
 
 def main():
     # Obtener la ruta base del proyecto
