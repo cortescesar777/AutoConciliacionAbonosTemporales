@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import pandas as pd
 
 from src.config.properties import PropertiesReader
 from src.config.steps import definir_pasos
@@ -16,25 +17,27 @@ def main():
     # Crear una barra de progreso con los pasos
     with tqdm(total=len(pasos), desc="Conciliacion abonos temporales") as pbar:
         # Paso 1: abrir ventana modal para la seleccion del archivo original
-        pbar.set_description(f"Paso 1/{len(pasos)}: {pasos[1]}")
+        pbar.set_description(f"Paso 1/{len(pasos)}: {pasos[0]}")
         path_archivo = seleccionar_archivo()
+        print(path_archivo)
         pbar.update(1)
         time.sleep(0.5)
 
         # Paso 2: lectura del archivo
-        pbar.set_description(f"Paso 2/{len(pasos)}: {pasos[2]}")
+        pbar.set_description(f"Paso 2/{len(pasos)}: {pasos[1]}")
         df1 = ExcelReader.read_excel_file(path_archivo)
+        print(df1)
         pbar.update(1)
         time.sleep(0.5)
 
         # Paso 3: filtro del archivo
-        pbar.set_description(f"Paso 3/{len(pasos)}: {pasos[3]}")
+        pbar.set_description(f"Paso 3/{len(pasos)}: {pasos[2]}")
         filter1(config, df1)
         pbar.update(1)
         time.sleep(0.5)
 
         # Paso 4: Finalizar
-        pbar.set_description(f"Paso 4/{len(pasos)}: {pasos[4]}")
+        pbar.set_description(f"Paso 4/{len(pasos)}: {pasos[3]}")
         pbar.update(1)
         time.sleep(0.5)
 
@@ -135,7 +138,7 @@ def limpiar_recursos():
 
 def filter1(config, df1):
     # Aplicar filtro si está configurado
-    filter_partidas = config.get_property('filter.codigo_transaccion')
+    filter_codigo_transaccion = config.get_property('filter.codigo_transaccion')
     filter_abonos = config.get_property('filter.codigo_transaccion.abonos')
     filter_reversos = config.get_property('filter.codigo_transaccion.reversos')
     filter_otro = config.get_property('filter.codigo_transaccion.otro')
@@ -143,10 +146,28 @@ def filter1(config, df1):
     filter_respuesta = config.get_property('filter.respuesta')
     filter_registros_aplicados = config.get_property('filter.respuesta.registro_aplicado')
 
-    if filter_partidas and filter_abonos and filter_reversos and filter_otro:
-        print(f"\nAplicando filtro: {filter_partidas} in ({filter_abonos},{filter_reversos},{filter_otro})")
-        df1 = df1[df1[filter_partidas] == filter_abonos] or df1[df1[filter_partidas] == filter_reversos] or df1[df1[filter_partidas] == filter_otro]
-        print(f"Archivo 1 después del filtro: {len(df1)} registros")
+    if filter_codigo_transaccion and filter_abonos and filter_reversos and filter_otro:
+        try:
+            filter_values = [filter_abonos, filter_reversos, filter_otro]
+            df1[filter_codigo_transaccion] = pd.to_numeric(df1[filter_codigo_transaccion], errors='coerce')
+            
+            # Eliminar filas con valores no numéricos
+            initial_count = len(df1)
+            df1 = df1.dropna(subset=[filter_codigo_transaccion])
+            dropped_count = initial_count - len(df1)
+            
+            # Convertir a enteros y luego a string para la comparación
+            df1[filter_codigo_transaccion] = df1[filter_codigo_transaccion].astype(int).astype(str)
+
+            # Filtrar solo filas donde el valor esté en los valores permitidos
+            mask = df1[filter_codigo_transaccion].isin(map(str, filter_values))
+            df1 = df1[mask]
+            
+            print(f" Archivo 1 después del filtro: {len(df1)} registros")
+        except ValueError as e:
+            print(f"Error al convertir valores a enteros: {e}")
+            # Si hay error en la conversión, no se aplica el filtro
+            print("No se pudo aplicar el filtro por códigos de transacción")
 
     if filter_respuesta and filter_registros_aplicados:
         print(f"\nAplicando filtro: {filter_respuesta} in ({filter_registros_aplicados})")
