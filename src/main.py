@@ -1,69 +1,135 @@
 import os
 import sys
-from config.properties import PropertiesReader
-from core.reader import ExcelReader
-from core.comparator import ExcelComparator
+import time
+
+from src.config.properties import PropertiesReader
+from src.config.steps import definir_pasos
+from src.core.reader import ExcelReader, seleccionar_archivo
+from tqdm import tqdm
+
 
 def main():
-    # Obtener la ruta base del proyecto
-    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    
-    # Cargar configuración
-    config_path = os.path.join(base_path, 'config', 'config.properties')
+    configurar()
+
+    pasos = definir_pasos()
+    config = configurar()
+    # Crear una barra de progreso con los pasos
+    with tqdm(total=len(pasos), desc="Conciliacion abonos temporales") as pbar:
+        # Paso 1: abrir ventana modal para la seleccion del archivo original
+        pbar.set_description(f"Paso 1/{len(pasos)}: {pasos[1]}")
+        path_archivo = seleccionar_archivo()
+        pbar.update(1)
+        time.sleep(0.5)
+
+        # Paso 2: lectura del archivo
+        pbar.set_description(f"Paso 2/{len(pasos)}: {pasos[2]}")
+        df1 = ExcelReader.read_excel_file(path_archivo)
+        pbar.update(1)
+        time.sleep(0.5)
+
+        # Paso 3: filtro del archivo
+        pbar.set_description(f"Paso 3/{len(pasos)}: {pasos[3]}")
+        filter1(config, df1)
+        pbar.update(1)
+        time.sleep(0.5)
+
+        # Paso 4: Finalizar
+        pbar.set_description(f"Paso 4/{len(pasos)}: {pasos[4]}")
+        pbar.update(1)
+        time.sleep(0.5)
+
+
+def configurar():
+    """
+    Configura la aplicación cargando la configuración desde el archivo de propiedades.
+    Retorna el objeto de configuración.
+    """
     try:
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        config_path = os.path.join(base_path, 'config', 'config.properties')
         config = PropertiesReader(config_path)
+        return config
     except Exception as e:
         print(f"Error al leer el archivo de configuración: {str(e)}")
         sys.exit(1)
-    
-    # Obtener rutas de archivos Excel
-    file1_path = os.path.join(base_path, config.get_property('excel.file1.path'))
-    file2_path = os.path.join(base_path, config.get_property('excel.file2.path'))
-    
-    # Obtener configuración de comparación
-    columns_to_compare = config.get_list_property('comparison.columns')
-    key_column = config.get_property('comparison.key_column')
-    
+
+
+def cargar_datos(config):
+    """
+    Carga los datos necesarios para el procesamiento.
+    Retorna los datos cargados.
+    """
     try:
-        # Leer archivos Excel
-        print(f"Leyendo archivo 1: {file1_path}")
-        df1 = ExcelReader.read_excel_file(file1_path)
-
-        filter1(config, df1)
-
-        # print(f"Leyendo archivo 2: {file2_path}")
-        # df2 = ExcelReader.read_excel_file(file2_path)
-
-        ## Crear comparador
-        # print("Comparando archivos...")
-        # comparator = ExcelComparator(df1, df2, key_column, columns_to_compare)
-        #
-        # # Realizar comparación
-        # comparison_result = comparator.compare()
-        #
-        # # Mostrar resultados
-        # print("\nResultados de la comparación:")
-        # print(f"Total registros en archivo 1: {comparison_result['total_records_df1']}")
-        # print(f"Total registros en archivo 2: {comparison_result['total_records_df2']}")
-        # print(f"Registros solo en archivo 1: {len(comparison_result['only_in_df1'])}")
-        # print(f"Registros solo en archivo 2: {len(comparison_result['only_in_df2'])}")
-        # print(f"Registros con diferencias: {comparison_result['total_differences']}")
-        #
-        # # Generar reporte de diferencias
-        # differences_df = comparator.generate_difference_report()
-        # if not differences_df.empty:
-        #     print("\nDetalle de diferencias:")
-        #     print(differences_df)
-        #
-        #     # Guardar reporte en Excel
-        #     report_path = os.path.join(base_path, 'comparison_report.xlsx')
-        #     differences_df.to_excel(report_path, index=False)
-        #     print(f"\nReporte guardado en: {report_path}")
-        # else:
-        #     print("\nNo se encontraron diferencias entre los archivos.")
+        # Mostrar diálogo para seleccionar archivo
+        ruta_archivo = seleccionar_archivo(
+            titulo="Seleccione el archivo de datos",
+            tipos_archivo=[
+                ('Archivos Excel', '*.xlsx *.xls'),
+                ('Archivos CSV', '*.csv')
+            ]
+        )
+        
+        if not ruta_archivo:
+            print("No se seleccionó ningún archivo. Saliendo...")
+            sys.exit(0)
+            
+        print(f"Cargando datos desde: {ruta_archivo}")
+        
+        # Determinar el tipo de archivo y cargarlo apropiadamente
+        if ruta_archivo.lower().endswith(('.xlsx', '.xls')):
+            import pandas as pd
+            datos = pd.read_excel(ruta_archivo)
+        elif ruta_archivo.lower().endswith('.csv'):
+            import pandas as pd
+            datos = pd.read_csv(ruta_archivo)
+        else:
+            print("Formato de archivo no soportado.")
+            sys.exit(1)
+            
+        return datos
         
     except Exception as e:
-        print(f"Error durante la comparación: {str(e)}")
+        print(f"Error al cargar los datos: {str(e)}")
+        sys.exit(1)
+
+
+def procesar_informacion(datos):
+    """
+    Procesa la información cargada según los requisitos del negocio.
+    Retorna los resultados del procesamiento.
+    """
+    try:
+        # Aquí iría la lógica de procesamiento
+        print("Procesando información...")
+        resultados = {}
+        return resultados
+    except Exception as e:
+        print(f"Error al procesar la información: {str(e)}")
+        sys.exit(1)
+
+
+def generar_reportes(resultados, config):
+    """
+    Genera los reportes con los resultados del procesamiento.
+    """
+    try:
+        # Aquí iría la lógica para generar reportes
+        print("Generando reportes...")
+        # Ejemplo: resultados.to_excel('reporte_final.xlsx')
+    except Exception as e:
+        print(f"Error al generar reportes: {str(e)}")
+        sys.exit(1)
+
+
+def limpiar_recursos():
+    """
+    Limpia los recursos utilizados durante la ejecución.
+    """
+    try:
+        # Aquí iría la lógica para liberar recursos
+        print("Limpiando recursos...")
+    except Exception as e:
+        print(f"Error al limpiar recursos: {str(e)}")
         sys.exit(1)
 
 
