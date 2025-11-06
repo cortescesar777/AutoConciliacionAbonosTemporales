@@ -28,16 +28,8 @@ def main():
         # Leer archivos Excel
         print(f"Leyendo archivo 1: {file1_path}")
         df1 = ExcelReader.read_excel_file(file1_path)
-        
-        # Aplicar filtro si está configurado
-        filter_partidas = config.get_property('filter.partidas')
-        filter_abonos = config.get_property('filter.partidas.abonos')
-        filter_reversos = config.get_property('filter.partidas.reversos')
-        
-        if filter_partidas and filter_abonos and filter_reversos:
-            print(f"\nAplicando filtro: {filter_partidas} in ({filter_abonos},{filter_reversos})")
-            df1 = df1[df1[filter_partidas] == filter_abonos] or df1[df1[filter_partidas] == filter_reversos]
-            print(f"Archivo 1 después del filtro: {len(df1)} registros")
+
+        filter1(config, df1)
 
         # print(f"Leyendo archivo 2: {file2_path}")
         # df2 = ExcelReader.read_excel_file(file2_path)
@@ -73,6 +65,28 @@ def main():
     except Exception as e:
         print(f"Error durante la comparación: {str(e)}")
         sys.exit(1)
+
+
+def filter1(config, df1):
+    # Aplicar filtro si está configurado
+    filter_partidas = config.get_property('filter.codigo_transaccion')
+    filter_abonos = config.get_property('filter.codigo_transaccion.abonos')
+    filter_reversos = config.get_property('filter.codigo_transaccion.reversos')
+    filter_otro = config.get_property('filter.codigo_transaccion.otro')
+
+    filter_respuesta = config.get_property('filter.respuesta')
+    filter_registros_aplicados = config.get_property('filter.respuesta.registro_aplicado')
+
+    if filter_partidas and filter_abonos and filter_reversos and filter_otro:
+        print(f"\nAplicando filtro: {filter_partidas} in ({filter_abonos},{filter_reversos},{filter_otro})")
+        df1 = df1[df1[filter_partidas] == filter_abonos] or df1[df1[filter_partidas] == filter_reversos] or df1[df1[filter_partidas] == filter_otro]
+        print(f"Archivo 1 después del filtro: {len(df1)} registros")
+
+    if filter_respuesta and filter_registros_aplicados:
+        print(f"\nAplicando filtro: {filter_respuesta} in ({filter_registros_aplicados})")
+        df1 = df1[df1[filter_respuesta] == filter_registros_aplicados]
+        print(f"Archivo 1 después del filtro: {len(df1)} registros")
+
 
 if __name__ == "__main__":
     main()
