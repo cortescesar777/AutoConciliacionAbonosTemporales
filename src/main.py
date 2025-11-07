@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 
 from src.config.properties import PropertiesReader
 from src.config.steps import definir_pasos
@@ -9,6 +8,7 @@ from tqdm import tqdm
 
 from src.steps.step2 import leer_archivo
 from src.steps.step3 import filtrar_codigo_transaccion_y_respuesta
+from src.steps.step4 import guardar_archivo_filtrado
 from src.utils.app_state import AppState
 
 
@@ -39,8 +39,13 @@ def procesar(appState):
         filtrar_codigo_transaccion_y_respuesta(appState)
         pbar.update(1)
 
-        # Paso 4: Finalizar
+        # Paso 4: guardar el archivo filtrado
         pbar.set_description(f"Paso 4/{len(pasos)}: {pasos[3]}")
+        guardar_archivo_filtrado(appState)
+        pbar.update(1)
+
+        # Paso 5: Finalizar
+        pbar.set_description(f"Paso 5/{len(pasos)}: {pasos[4]}")
         pbar.update(1)
 
 

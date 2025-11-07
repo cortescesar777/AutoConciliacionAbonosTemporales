@@ -4,6 +4,7 @@ def definir_pasos():
         "seleccion del archivo...",
         "leyendo archivo...",
         "Filtrando archivo...",
+        "guardando archivo filtrado...",
         "¡Proceso completado!"
     ]
     return pasos
