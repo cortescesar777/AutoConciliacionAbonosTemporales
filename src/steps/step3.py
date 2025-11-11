@@ -35,5 +35,7 @@ def filtrar_codigo_transaccion_y_respuesta(app_state):
             print("No se pudo aplicar el filtro por códigos de transacción")
 
     if filter_respuesta and filter_registros_aplicados:
-        dataframe = dataframe[dataframe[filter_respuesta] == filter_registros_aplicados]
+        dataframe[filter_respuesta] = dataframe[filter_respuesta].astype(str).str.capitalize()
+        dataframe = dataframe[dataframe[filter_respuesta] == filter_registros_aplicados.capitalize()]
+    
     app_state.set_dataframe('dataFrameFiltrado', dataframe)
