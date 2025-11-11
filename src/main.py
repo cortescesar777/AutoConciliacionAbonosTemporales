@@ -23,7 +23,7 @@ def procesar(appState):
     pasos = definir_pasos()
 
     # Crear una barra de progreso con los pasos
-    with tqdm(total=len(pasos), desc="Conciliacion abonos temporales") as pbar:
+    with tqdm(total=len(pasos), desc="Conciliacion abonos temporales", colour="green") as pbar:
         # Paso 1: abrir ventana modal para la seleccion del archivo original
         pbar.set_description(f"Paso 1/{len(pasos)}: {pasos[0]}")
         path_archivo = seleccionar_archivo()

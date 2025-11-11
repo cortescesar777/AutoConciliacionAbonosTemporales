@@ -3,7 +3,8 @@ import os
 from datetime import datetime
 
 def guardar_archivo_filtrado(app_state):
-    dataframe = app_state.get_dataframe('dataFrameFiltrado').copy()
+    # Obtener el DataFrame y eliminar la primera columna
+    dataframe = app_state.get_dataframe('dataFrameFiltrado').iloc[:, 1:].copy()
     
     # Obtener la ruta del proyecto
     project_path = app_state.get_project_path()
@@ -14,8 +15,8 @@ def guardar_archivo_filtrado(app_state):
         os.makedirs(output_dir)
     
     # Generar nombre del archivo con timestamp
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    output_file = os.path.join(output_dir, f'datos_filtrados_{timestamp}.xlsx')
+    fecha_formateada = datetime.now().strftime('%Y%m%d')
+    output_file = os.path.join(output_dir, f'Historico_Lectura_Tiempo_Real_{fecha_formateada}.xlsx')
     
     try:
         # Guardar el DataFrame en Excel

@@ -5,17 +5,14 @@ def filtrar_codigo_transaccion_y_respuesta(app_state):
     dataframe = app_state.get_dataframe('dataFrameOriginal').copy()
     # Aplicar filtro si está configurado
     filter_codigo_transaccion = config.get_property('filter.codigo_transaccion')
-    filter_abonos = config.get_property('filter.codigo_transaccion.abonos')
-    filter_reversos = config.get_property('filter.codigo_transaccion.reversos')
-    filter_otro = config.get_property('filter.codigo_transaccion.otro')
+    # Get all transaction codes as a list
+    filter_codigos = config.get_list_property('filter.codigo_transaccion.values')
 
     filter_respuesta = config.get_property('filter.respuesta')
     filter_registros_aplicados = config.get_property('filter.respuesta.registro_aplicado')
 
-    if filter_codigo_transaccion and filter_abonos and filter_reversos and filter_otro:
+    if filter_codigo_transaccion and filter_codigos:
         try:
-            filter_values = [filter_abonos, filter_reversos, filter_otro]
-            
             # Convertir la columna a numérico, los no convertibles serán NaN
             dataframe[filter_codigo_transaccion] = pd.to_numeric(
                 dataframe[filter_codigo_transaccion], 
@@ -29,7 +26,7 @@ def filtrar_codigo_transaccion_y_respuesta(app_state):
             dataframe[filter_codigo_transaccion] = dataframe[filter_codigo_transaccion].astype(int).astype(str)
 
             # Filtrar solo filas donde el valor esté en los valores permitidos
-            mask = dataframe[filter_codigo_transaccion].isin(map(str, filter_values))
+            mask = dataframe[filter_codigo_transaccion].isin(map(str, filter_codigos))
             dataframe = dataframe[mask]
 
         except ValueError as e:
@@ -39,5 +36,4 @@ def filtrar_codigo_transaccion_y_respuesta(app_state):
 
     if filter_respuesta and filter_registros_aplicados:
         dataframe = dataframe[dataframe[filter_respuesta] == filter_registros_aplicados]
-    print(dataframe)
     app_state.set_dataframe('dataFrameFiltrado', dataframe)
